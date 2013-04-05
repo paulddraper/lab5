@@ -65,7 +65,7 @@ class App extends CI_Controller {
 		);
 	}
 
-	define("MIN_DIST", 40); //feet
+	define("MAX_DIST", 90); //feet
 	public function event() {
 		if (this->input->get("_domain") == "geopuzzle" && this->input->get("_name") == "locate") {
 			$username = this->input->get("username");
@@ -75,7 +75,7 @@ class App extends CI_Controller {
 				+ "SELECT lat, lng, question, nextclueid "
 				+ "FROM clue c join user u ON c.id = u.currentclueid WHERE username = ? "
 			, array($username));
-			if (MIN_DIST >= distance($lat, $lng, $row->lat, $row->lng) {
+			if (MAX_DIST >= distance($lat, $lng, $row->lat, $row->lng) {
 				$message = sprintf("You made it! %s", $username, $row->question);
 				sendSMS($message);
 				$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
