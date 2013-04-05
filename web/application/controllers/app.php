@@ -16,24 +16,6 @@ class App extends CI_Controller {
 		$this->user = $this->user();
 	}
 
-	private function distance($lat1, $lng1, $lat2, $lng2, $miles = true)
-	{
-		$pi80 = M_PI / 180;
-		$lat1 *= $pi80;
-		$lng1 *= $pi80;
-		$lat2 *= $pi80;
-		$lng2 *= $pi80;
-
-		$r = 6372.797; // mean radius of Earth in km
-		$dlat = $lat2 - $lat1;
-		$dlng = $lng2 - $lng1;
-		$a = sin($dlat / 2) * sin($dlat / 2) + cos($lat1) * cos($lat2) * sin($dlng / 2) * sin($dlng / 2);
-		$c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-		$km = $r * $c;
-
-		return ($miles ? ($km * 0.621371192) : $km);
-	}
-
 	public function index()
 	{
 		if($this->authenticate()){
@@ -75,7 +57,7 @@ class App extends CI_Controller {
 	}
 	
 
-	define("EARTH_RADIUS", 20900000) //feet
+	define("EARTH_RADIUS", 20900000); //feet
 	private function distance($lat1, $lng1, $lat2, $lng2){
 		return M_PI * EARTH_RADIUS * acos(
 			  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($lng1 - $lng2))
@@ -83,16 +65,30 @@ class App extends CI_Controller {
 		);
 	}
 
+	define("MIN_DIST", 40); //feet
 	public function event() {
-		if(this->input->get("_domain") == "geopuzzle" && this->input->get("_name") == "locate"){
-			$username = 
-			$row = $this->db->query("SELECT lat, lng, text, answer, nextclueid from clue c join user u where username = ?", array($username))->row()
+		if (this->input->get("_domain") == "geopuzzle" && this->input->get("_name") == "locate") {
+			$username = this->input->get("username");
+			$lat = this->input->get("lat");
+			$lng = this->input->get("lng");
+			$row = $this->db->single_query(""
+				+ "SELECT lat, lng, question, nextclueid "
+				+ "FROM clue c join user u ON c.id = u.currentclueid WHERE username = ? "
+			, array($username));
+			if (MIN_DIST >= distance($lat, $lng, $row->lat, $row->lng) {
+				$message = sprintf("You made it! %s", $username, $row->question);
+				sendSMS($message);
+				$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
+			}
+		} else if(this->input->get("domain") == "geopuzzle" && this->input->get("_name") == "answer") {
+			//TODO: implement
+		} 
+	}
 
-		}
+	private function sendSMS($message) {
+		//TODO: implement
 	}
 }
-
-//this->input->get("userid")
 
 /* End of file app.php */
 /* Location: ./application/controllers/app.php */
