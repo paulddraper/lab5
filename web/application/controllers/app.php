@@ -57,32 +57,34 @@ class App extends CI_Controller {
 	}
 	
 
-	define("EARTH_RADIUS", 20900000); //feet
+	const EARTH_RADIUS = 20900000; //feet
 	private function distance($lat1, $lng1, $lat2, $lng2){
-		return M_PI * EARTH_RADIUS * acos(
+		return M_PI * self::EARTH_RADIUS * acos(
 			  cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($lng1 - $lng2))
 			+ sin(deg2rad($lat1)) * sin(deg2rad($lat2)) 
 		);
 	}
 
-	define("MAX_DIST", 90); //feet
-	public function event() {
-		if (this->input->get("_domain") == "geopuzzle" && this->input->get("_name") == "locate") {
-			$username = this->input->get("username");
-			$lat = this->input->get("lat");
-			$lng = this->input->get("lng");
-			$row = $this->db->single_query(""
-				+ "SELECT lat, lng, question, nextclueid "
-				+ "FROM clue c join user u ON c.id = u.currentclueid WHERE username = ? "
-			, array($username));
-			if (MAX_DIST >= distance($lat, $lng, $row->lat, $row->lng) {
+	const MAX_DIST = 90; //feet
+	public function event() {;
+		if ($_GET["_domain"] == "geopuzzle" && $_GET["_name"] == "locate") {
+			$username = $_GET["username"];
+			$lat = $_GET["lat"];
+			$lng = $_GET["lng"];
+			$row = $this->db->query(""
+				+ "SELECT c.lat, c.lng, c.question, c.nextclueid "
+				+ "FROM clue c join user u ON c.id = u.currentclueid WHERE u.username = ?"
+			, array($username))->row();
+			if (self::MAX_DIST >= distance($lat, $lng, $row->lat, $row->lng)) {
 				$message = sprintf("You made it! %s", $username, $row->question);
 				sendSMS($message);
 				$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
 			}
-		} else if(this->input->get("domain") == "geopuzzle" && this->input->get("_name") == "answer") {
+		} else if($_GET["_domain"] == "geopuzzle" && $_GET["_name"] == "answer") {
 			//TODO: implement
-		} 
+		} else {
+			echo "Event not understood";
+		}
 	}
 
 	private function sendSMS($message) {
