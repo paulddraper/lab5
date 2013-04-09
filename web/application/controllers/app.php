@@ -71,23 +71,64 @@ class App extends CI_Controller {
 			$username = $_GET["username"];
 			$lat = $_GET["lat"];
 			$lng = $_GET["lng"];
+			
 			$row = $this->db->query(""
-				+ "SELECT c.lat, c.lng, c.question, c.nextclueid "
-				+ "FROM clue c join user u ON c.id = u.currentclueid WHERE u.username = ?"
+				+ "SELECT u.number, c.lat, c.lng, c.altquestion, nc.question, nc.id \n"
+				+ "FROM user u, clue c \n"
+				+ "LEFT OUTER JOIN clue nc ON (nc.id = c.nextclueid) \n"
+				+ "WHERE c.id = u.currentclueid \n"
+				+ "AND u.username = ? \n"
 			, array($username))->row();
 			if (self::MAX_DIST >= distance($lat, $lng, $row->lat, $row->lng)) {
-				$message = sprintf("You made it! %s", $username, $row->question);
-				sendSMS($message);
-				$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
+				$message = sprintf("You made it! %s", $username);
+				if($row->altquestion) {
+					$message = sprintf("%s\n%s", $message, $row->altquestion);
+				} else {
+					if($row->question) {
+						$message = sprintf("%s\nYour next clue: %s", $message, $row->question);
+						$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
+					} else {
+						$message = sprintf("%s You're all done. Thanks for playing!", $message);
+					}
+				}
+				sendSMS($message, $row-number);
 			}
 		} else if($_GET["_domain"] == "geopuzzle" && $_GET["_name"] == "answer") {
-			//TODO: implement
+			$number = $_GET["From"];
+			$body = $_GET["Body"];
+			
+			//trim number to something we can use (no symbols, exclude country code)
+			$number = preg_replace("/\D/", "", $number);
+			while(strlen($number) > 10) {
+				$number = substr($number, 1);
+			}
+			
+			$row = $this->db->query(""
+				+ "SELECT c.answer, nc.question, nc.id \n"
+				+ "FROM user u, clue c \n"
+				+ "LEFT OUTER JOIN clue nc ON (nc.id = c.nextclueid) \n"
+				+ "WHERE c.id = u.currentclueid \n"
+				+ "AND u.number = ? \n"
+			, array($username))->row();
+			if (strcasecmp($body, $row->answer) == 0) {		//Correct answer. Process next question
+				$message = "Correct!";
+				if($row->question) {	//If there is another question, send it
+					$message = sprintf("%s\nYour next clue: %s", $message, $row->question);
+					$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
+				} else {
+					$message = sprintf("%s You're all done. Thanks for playing!", $message);
+				}
+				sendSMS($message, $number);
+			} else {	//Wrong answer
+				$message = "That's not quite right. Try again!";
+				sendSMS($message, $number);
+			}
 		} else {
 			echo "Event not understood";
 		}
 	}
 
-	private function sendSMS($message) {
+	private function sendSMS($message, $number) {
 		//TODO: implement
 	}
 }
