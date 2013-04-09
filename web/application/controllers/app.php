@@ -128,8 +128,17 @@ class App extends CI_Controller {
 		}
 	}
 
-	private function sendSMS($message, $number) {
-		//TODO: implement
+	private function sendSMS($message, $to) {
+		$this->load->library('twilio');
+
+		$from = '0000000000';
+
+		$response = $this->twilio->sms($from, $to, $message);
+
+		if($response->IsError)
+			echo 'Error: ' . $response->ErrorMessage;
+		else
+			echo 'Sent message to ' . $to;
 	}
 }
 
