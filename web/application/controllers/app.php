@@ -12,15 +12,13 @@ class App extends CI_Controller {
 	    $this->load->library('session');
 	    $this->load->library('template');
 	    $this->load->database();
-		// $this->load->helper("crud_helper");
-		$this->user = $this->user();
 	}
 
 	/**
 	 * Main page; user can enter phone number.
 	 */
 	public function index() {
-		$this->template->page("home_view");
+		$this->template->page("login");
 	}
 
 	/**
@@ -28,17 +26,15 @@ class App extends CI_Controller {
 	 */
 	private function trimphone($phone) {
 		$phone = preg_replace("/\D/", "", $phone);
-		while(strlen($phone) > 10) {
-			$phone = substr(1, $phone);
-		}
+		return substr($phone, 0, 10);
 	}
 
 	/**
 	 * Make a POST request here to start.
 	 */
 	public function start() {
-		$phone = $this->trimphone($this->input->post("phone"));
-		
+		$phone = $this->trimphone($_POST["phone"]);
+
 		// create user
 		$this->db->query("INSERT OR IGNORE INTO user VALUES (?,1)", array($phone));
 		
