@@ -25,8 +25,7 @@ class App extends CI_Controller {
 	 * Trim phone to something we can use (no symbols, exclude country code).
 	 */
 	private function trimphone($phone) {
-		$phone = preg_replace("/\D/", "", $phone);
-		return substr($phone, 0, 10);
+		return preg_replace("/\D/", "", $phone).substr($phone, 0, 10);
 	}
 
 	/**
