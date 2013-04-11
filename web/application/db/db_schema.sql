@@ -1,5 +1,5 @@
 CREATE TABLE user (
-  , phone TEXT PRIMARY KEY
+  phone TEXT PRIMARY KEY
   , currentclueid INTEGER REFERENCES clue(id)
 );
 
