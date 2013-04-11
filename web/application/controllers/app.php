@@ -18,35 +18,35 @@ class App extends CI_Controller {
 	 * Main page; user can enter phone number.
 	 */
 	public function index() {
-		$this->template->page("login");
+		$this->template->page('login');
 	}
 
 	/**
 	 * Trim phone to something we can use (no symbols, exclude country code).
 	 */
 	private function trimphone($phone) {
-		return preg_replace("/\D/", "", $phone).substr($phone, 0, 10);
+		return preg_replace('/\D/', '', $phone).substr($phone, 0, 10);
 	}
 
 	/**
 	 * Make a POST request here to start.
 	 */
 	public function start() {
-		$phone = $this->trimphone($_POST["phone"]);
+		$phone = $this->trimphone($_POST['phone']);
 
 		// create user
-		$this->db->query("INSERT OR IGNORE INTO user VALUES (?,1)", array($phone));
+		$this->db->query('INSERT OR IGNORE INTO user VALUES (?,1)', array($phone));
 		
 		// send SMS with clue
-		$row = $this->db->query(""
-			+ "SELECT clue FROM clue\n"
-			+ "  WHERE id = (SELECT currentclueid FROM user WHERE phone = ?)\n"
+		$row = $this->db->query(''
+			+ 'SELECT clue FROM clue\n'
+			+ '  WHERE id = (SELECT currentclueid FROM user WHERE phone = ?)\n'
 			, array($phone)
 		)->row();
 		$this->sendSms($phone, $row->clue);
 		
 		// go to mobile app
-		redirect(sprintf("/mobile#%s", $phone));
+		redirect(sprintf('/mobile#%s', $phone));
 	}
 
 	/**
@@ -66,25 +66,25 @@ class App extends CI_Controller {
 	const MAX_DIST = 90; //feet
 	public function event() {;
 		// geopuzzle:locate
-		if ($_GET["_domain"] == "geopuzzle" && $_GET["_name"] == "locate") {
-			$username = $_GET["username"];
-			$lat = $_GET["lat"];
-			$lng = $_GET["lng"];
+		if ($_GET['_domain'] == 'geopuzzle' && $_GET['_name'] == 'locate') {
+			$username = $_GET['username'];
+			$lat = $_GET['lat'];
+			$lng = $_GET['lng'];
 			
-			$row = $this->db->query(""
-				+ "SELECT name, lat, lng, clue FROM clue\n"
-				+ "  WHERE id = (SELECT currentclueid FROM user WHERE user = ?)\n"
+			$row = $this->db->query(''
+				+ 'SELECT name, lat, lng, clue FROM clue\n'
+				+ '  WHERE id = (SELECT currentclueid FROM user WHERE user = ?)\n'
 				, array($username)
 			)->row();
 			
 			if (self::MAX_DIST >= $this->distance($lat, $lng, $row->lat, $row->lng)) {
-				$message = sprintf("You made it!\n%s", $row->question);
+				$message = sprintf('You made it!\n%s', $row->question);
 				sendSMS($message, $row->phone);
 			}
 		}
 		// undefined
 		else {
-			echo "Event not understood";
+			echo 'Event not understood';
 		}
 	}
 	
@@ -92,47 +92,47 @@ class App extends CI_Controller {
 	 * SMS 
 	 */
 	public function smsEvent() {
-		$phone = $_GET["From"];
-		$body = $_GET["Body"];
+		$phone = $_GET['From'];
+		$body = $_GET['Body'];
 	
-		$message = "";
+		$message = '';
 		// help
-		if (strcasecmp($body, "help me") == 0) {
-			$row = $this->db->query(""
-				+ "SELECT hint FROM clue\n"
-				+ "  WHERE id = (SELECT currentclueid FROM user WHERE phone = ?)\n"
+		if (strcasecmp($body, 'help me') == 0) {
+			$row = $this->db->query(''
+				+ 'SELECT hint FROM clue\n'
+				+ '  WHERE id = (SELECT currentclueid FROM user WHERE phone = ?)\n'
 				, array($phone)
 			)->row();
 			if ($row->hint != NULL) {
 				$message = $row->hint;
 			} else {
-				$message = "No hint available. Sorry.";
+				$message = 'No hint available. Sorry.';
 			}
 		}
 		// answer
 		else {
-			$row = $this->db->query(""
-				+ "SELECT answer, nextclueid FROM clue\n"
-				+ "  WHERE id = (SELECT currentclueid FROM user where phone = ?)\n"
+			$row = $this->db->query(''
+				+ 'SELECT answer, nextclueid FROM clue\n'
+				+ '  WHERE id = (SELECT currentclueid FROM user where phone = ?)\n'
 				, array($phone)
 			)->row();
 			
 			// correct
 			if (strcasecmp($body, $row->answer) == 0) {
-				$this->db->query("UPDATE user SET currentclueid = ?", array($row->nextclueid));
+				$this->db->query('UPDATE user SET currentclueid = ?', array($row->nextclueid));
 				if($row->nextclueid != NULL) {
-					$row = $this->db->query(""
-						+ "SELECT clue FROM clue WHERE id = ?"
+					$row = $this->db->query(''
+						+ 'SELECT clue FROM clue WHERE id = ?'
 						, array($row->nextclueid)
 					)->row();
-					$message = sprintf("Correct! Next clue %s", $row->clue);
+					$message = sprintf('Correct! Next clue %s', $row->clue);
 				} else {
-					$message = "Correct! You're all done. Thanks for playing!";
+					$message = 'Correct! You''re all done. Thanks for playing!';
 				}
 			}
 			// incorrect
 			else {
-				$message = "That's not quite right. Try again!";
+				$message = 'That''s not quite right. Try again!';
 			}
 		}
 		$this->sendSMS($message, $phone);
