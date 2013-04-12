@@ -68,7 +68,7 @@ INSERT INTO clue (id, name, lat, lng, clue, question, answer, nextclueid) VALUES
 	, 'Every semester, many prayers are said here. You may not enter unshaven.'
 	, 'question'
 	, 'answer'
-	, NULL
+	, -1
 );
 
 COMMIT;

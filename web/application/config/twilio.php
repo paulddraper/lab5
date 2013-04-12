@@ -18,17 +18,17 @@
 	/**
 	 * Mode ("sandbox" or "prod")
 	 **/
-	$config['mode']   = 'sandbox';
+	$config['mode']   = 'prod';
 
 	/**
 	 * Account SID
 	 **/
-	$config['account_sid']   = '';
+	$config['account_sid']   = 'AC4ccb3f238db9601a3967e52aca437986';
 
 	/**
 	 * Auth Token
 	 **/
-	$config['auth_token']    = '';
+	$config['auth_token']    = '9bc2bf9e5188af03a0e8db9d57d8fd84';
 
 	/**
 	 * API Version
@@ -38,7 +38,7 @@
 	/**
 	 * Twilio Phone Number
 	 **/
-	$config['number']        = '';
+	$config['number']        = '13212521456';
 
 
 /* End of file twilio.php */
